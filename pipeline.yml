@@ -1,0 +1,64 @@
+name: Проверка качества кода и уведомление
+
+on:
+  pull_request:
+    branches:
+      - dev
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+
+jobs:
+  code-quality:
+    name: Проверка качества кода
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Скачивание исходного кода из репозитория
+        uses: actions/checkout@v4
+
+      - name: Установка Java 17 версии
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Компиляция Java 
+        run: |
+          mkdir -p out
+          javac -d out src/main/java/com/devops/bot/Main.java
+          javac -d out -cp out src/main/java/com/devops/bot/MainTest.java
+
+      - name: Запуск тестов
+        run: |
+          java -cp out com.devops.bot.MainTest
+
+      - name: Проверка качества исходного кода
+        run: |
+          chmod +x scripts/check_quality.sh
+          bash scripts/check_quality.sh
+
+      - name: Сохранение отчёта как артефакт
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-report
+          path: quality-report.txt
+          retention-days: 7
+
+  notify:
+    name: Уведомление в Telegram
+    runs-on: ubuntu-latest
+    needs: code-quality
+    if: always()
+
+    steps:
+      - name: Скачивание исходного кода из репозитория
+        uses: actions/checkout@v4
+
+      - name:  Отправка уведомления в Telegram группу
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          chmod +x scripts/notify_telegram.sh
+          bash scripts/notify_telegram.sh
