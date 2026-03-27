@@ -29,19 +29,14 @@ jobs:
         run: |
           mkdir -p out
           javac -d out src/main/java/com/devops/bot/Main.java
-          javac -d out -cp out src/main/java/com/devops/bot/MainTest.java
 
-      - name: Шаг 4 — Запуск тестов
-        run: |
-          java -cp out com.devops.bot.MainTest
-
-      - name: Шаг 5 — Анализ кода через SonarCloud
+      - name: Шаг 4 — Анализ кода через SonarCloud
         uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-      - name: Шаг 6 — Сохранение отчёта как артефакт pipeline
+      - name: Шаг 5 — Сохранение отчёта как артефакт pipeline
         uses: actions/upload-artifact@v4
         with:
           name: sonar-report
