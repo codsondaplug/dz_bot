@@ -1,39 +1,47 @@
 #!/bin/bash
 set -e
 
+# Переменные передаются через env (GitHub Secrets)
 BOT_TOKEN="${TELEGRAM_BOT_TOKEN}"
 CHAT_ID="${TELEGRAM_CHAT_ID}"
 
+# Данные из GitHub Actions
 BRANCH="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
 REPO="${GITHUB_REPOSITORY}"
+REPO_NAME="${REPO##*/}"
+OWNER="${REPO%%/*}"
 ACTOR="${GITHUB_ACTOR}"
 RUN_ID="${GITHUB_RUN_ID}"
 SHA="${GITHUB_SHA}"
 SHORT_SHA="${SHA:0:7}"
 MERGE_DATE=$(date '+%Y.%m.%d %H:%M:%S')
 
+# Версия на основе номера запуска
+VERSION="0.${GITHUB_RUN_NUMBER}.0"
+
+# Ссылки
 REPO_URL="https://github.com/${REPO}"
 MERGE_URL="https://github.com/${REPO}/commit/${SHA}"
 PIPELINE_URL="https://github.com/${REPO}/actions/runs/${RUN_ID}"
 
-MESSAGE="🚀 *Новый выпуск изменений*
+# Формируем сообщение
+MESSAGE="*Новый выпуск изменений*
+Проект : ${REPO_NAME}
+Версия : ${VERSION}
+Дата: ${MERGE_DATE}
+Ветка: ${BRANCH}
 
-📦 *Проект:* \`${REPO}\`
-🌿 *Ветка:* \`${BRANCH}\`
-👤 *Автор:* \`${ACTOR}\`
-📅 *Дата:* \`${MERGE_DATE}\`
-🔖 *Коммит:* \`${SHORT_SHA}\`
+*Информация о Git-репозитории*
+GIT TAG: ${VERSION}
 
-🔗 *Информация о Git-репозитории*
-GIT SHA: \`${SHORT_SHA}\`
+*Ссылки:*
+- [Репозиторий](${REPO_URL})
+- [Мерж](${MERGE_URL})
+- [Pipeline](${PIPELINE_URL})
 
-📎 *Ссылки:*
-• [Репозиторий](${REPO_URL})
-• [Мерж](${MERGE_URL})
-• [Pipeline](${PIPELINE_URL})
+Все проверки пройдены успешно!"
 
-✅ Все проверки пройдены успешно!"
-
+# Отправка уведомления в Telegram
 curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
   -H "Content-Type: application/json" \
   -d "{
@@ -44,4 +52,4 @@ curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
   }"
 
 echo ""
-echo "✅ Уведомление в Telegram отправлено успешно!"
+echo "Уведомление в Telegram отправлено успешно!"
